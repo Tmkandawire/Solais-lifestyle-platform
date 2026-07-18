@@ -9,6 +9,13 @@ const environmentSchema = z.object({
 
   FRONTEND_URL: z.url(),
 
+  DATABASE_URL: z
+    .string()
+    .min(1, 'DATABASE_URL is required.')
+    .refine((value) => value.startsWith('postgresql://') || value.startsWith('postgres://'), {
+      message: 'DATABASE_URL must use the postgresql:// or postgres:// protocol.',
+    }),
+
   JWT_ACCESS_SECRET: z.string().min(32),
 
   JWT_REFRESH_SECRET: z.string().min(32),

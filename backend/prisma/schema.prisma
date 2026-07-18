@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  ATTENDEE
+  VENDOR
+  PARTNER
+}
+
+model Account {
+  id String @id @default(uuid())
+
+  email        String @unique
+  passwordHash String
+
+  role Role @default(ATTENDEE)
+
+  emailVerifiedAt DateTime?
+
+  isActive Boolean @default(true)
+
+  lastLoginAt DateTime?
+
+  sessions Session[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  
+  @@index([role])
+  @@map("accounts")
+}
+
+model Session {
+  id String @id @default(uuid())
+
+  accountId String
+
+  refreshTokenHash String
+
+  ipAddress String?
+
+  userAgent String?
+
+  expiresAt DateTime
+
+  revokedAt DateTime?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+  @@map("sessions")
+}
