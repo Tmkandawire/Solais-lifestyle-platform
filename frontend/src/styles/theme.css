@@ -1,0 +1,30 @@
+:root {
+  /* Brand */
+
+  --color-primary: #142325;
+  --color-primary-light: #1f3234;
+
+  --color-accent: #c99a5b;
+  --color-accent-light: #d8b47a;
+
+  /* Backgrounds */
+
+  --color-background: #f7f3ed;
+  --color-surface: #efe7dc;
+
+  /* Text */
+
+  --color-heading: #1d2425;
+  --color-body: #5f6462;
+  --color-white: #ffffff;
+
+  /* Borders */
+
+  --color-border: #d9cfbf;
+
+  /* Layout */
+
+  --container: 1280px;
+
+  --section-spacing: 8rem;
+}
