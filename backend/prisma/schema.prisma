@@ -15,11 +15,21 @@ enum Role {
   PARTNER
 }
 
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
 model Account {
   id String @id @default(uuid())
 
   email        String @unique
   passwordHash String
+
+  firstName String
+  lastName  String
 
   role Role @default(ATTENDEE)
 
@@ -29,13 +39,13 @@ model Account {
 
   lastLoginAt DateTime?
 
-  sessions Session[]
+  sessions      Session[]
+  eventsCreated Event[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  
   @@index([role])
   @@map("accounts")
 }
@@ -45,7 +55,7 @@ model Session {
 
   accountId String
 
-  refreshTokenHash String
+  refreshTokenHash String @unique
 
   ipAddress String?
 
@@ -63,4 +73,41 @@ model Session {
   @@index([expiresAt])
   @@index([revokedAt])
   @@map("sessions")
+}
+
+model Event {
+  id String @id @default(uuid())
+
+  title String
+
+  description String
+
+  venue String
+
+  city String
+
+  startDate DateTime
+
+  endDate DateTime
+
+  bannerImageUrl String?
+
+  capacity Int?
+
+  status EventStatus @default(DRAFT)
+
+  createdById String
+
+  createdBy Account @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  deletedAt DateTime?
+
+  @@index([status])
+  @@index([startDate])
+  @@index([createdById])
+  @@map("events")
 }
