@@ -1,8 +1,9 @@
 import { prisma } from '../lib/prisma.js';
-import { Prisma } from '../generated/prisma/client.js';
+import { Prisma, type Session } from '../generated/prisma/client.js';
 import { SessionNotFoundError } from '../shared/errors/session.errors.js';
 
 export interface CreateSessionData {
+  id?: string;
   accountId: string;
   refreshTokenHash: string;
   expiresAt: Date;
@@ -13,6 +14,7 @@ export interface CreateSessionData {
 export async function createSession(data: CreateSessionData) {
   return prisma.session.create({
     data: {
+      ...(data.id !== undefined ? { id: data.id } : {}),
       accountId: data.accountId,
       refreshTokenHash: data.refreshTokenHash,
       expiresAt: data.expiresAt,
@@ -40,9 +42,20 @@ export async function findSessionByRefreshTokenHash(refreshTokenHash: string) {
   });
 }
 
-export async function updateRefreshTokenHash(id: string, refreshTokenHash: string) {
-  return updateOrThrow(id, {
+/**
+ * Persists a rotated refresh token hash for an existing session.
+ *
+ * Called during refresh-token rotation. The session expiry may also be
+ * updated when the refresh token is rotated.
+ */
+export async function updateRefreshTokenHash(
+  sessionId: string,
+  refreshTokenHash: string,
+  expiresAt?: Date,
+): Promise<Session> {
+  return updateOrThrow(sessionId, {
     refreshTokenHash,
+    ...(expiresAt !== undefined ? { expiresAt } : {}),
   });
 }
 
