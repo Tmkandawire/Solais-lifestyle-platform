@@ -6,6 +6,8 @@ import { EmailAlreadyExistsError, AccountNotFoundError } from '../shared/errors/
 export interface CreateAccountData {
   email: string;
   passwordHash: string;
+  firstName: string;
+  lastName: string;
   role?: Role;
 }
 
@@ -20,6 +22,8 @@ export async function createAccount(data: CreateAccountData) {
       data: {
         email: data.email,
         passwordHash: data.passwordHash,
+        firstName: data.firstName,
+        lastName: data.lastName,
         role: data.role ?? Role.ATTENDEE,
       },
     });

@@ -24,6 +24,9 @@ const environmentSchema = z.object({
 
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
+  JWT_ISSUER: z.string().min(1),
+  JWT_AUDIENCE: z.string().min(1),
+
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']).default('info'),
 });
 

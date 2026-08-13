@@ -1,24 +1,31 @@
 import { defineConfig } from 'vitest/config';
+import { loadEnv } from 'vite';
 
-export default defineConfig({
-  test: {
-    environment: 'node',
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
 
-    include: ['tests/**/*.test.ts'],
+  Object.assign(process.env, env);
 
-    globals: false,
+  return {
+    test: {
+      environment: 'node',
 
-    clearMocks: true,
+      include: ['tests/**/*.test.ts'],
 
-    restoreMocks: true,
+      globals: false,
 
-    mockReset: true,
+      clearMocks: true,
 
-    testTimeout: 10_000,
+      restoreMocks: true,
 
-    coverage: {
-      reporter: ['text', 'html'],
-      reportsDirectory: 'coverage',
+      mockReset: true,
+
+      testTimeout: 10_000,
+
+      coverage: {
+        reporter: ['text', 'html'],
+        reportsDirectory: 'coverage',
+      },
     },
-  },
+  };
 });
