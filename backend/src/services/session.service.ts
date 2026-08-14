@@ -20,6 +20,7 @@ export interface CreateSessionOptions {
 }
 
 export interface SessionTokens {
+  accountId: string;
   sessionId: string;
   refreshToken: string;
   expiresAt: Date;
@@ -91,6 +92,7 @@ export async function createSession(options: CreateSessionOptions): Promise<Sess
   });
 
   return {
+    accountId: options.accountId,
     sessionId,
     refreshToken,
     expiresAt,
@@ -181,9 +183,10 @@ export async function rotateRefreshToken(refreshToken: string): Promise<SessionT
   const newRefreshTokenHash = hashRefreshToken(refreshTokenJwt);
   const expiresAt = getRefreshSessionExpiry();
 
-  await updateRefreshTokenHash(payload.sessionId, newRefreshTokenHash, expiresAt);
+  await updateRefreshTokenHash(payload.sessionId, newRefreshTokenHash);
 
   return {
+    accountId: payload.sub,
     sessionId: payload.sessionId,
     refreshToken: refreshTokenJwt,
     expiresAt,

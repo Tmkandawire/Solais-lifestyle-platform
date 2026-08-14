@@ -4,6 +4,7 @@ import { PasswordTooLongError } from '../shared/errors/password.errors.js';
 const MIN_BCRYPT_ROUNDS = 10;
 const MAX_BCRYPT_ROUNDS = 15;
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS ?? 12);
+const DUMMY_PASSWORD_HASH = '$2b$12$tOeAo.vI..szbKoMDB9gS.3cNG8pIO4eo32b..O8Ax.WwsbC3Epw.';
 
 if (
   !Number.isInteger(BCRYPT_ROUNDS) ||
@@ -43,6 +44,17 @@ export async function hashPassword(password: string): Promise<string> {
 export async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
   assertPasswordLength(password);
   return bcrypt.compare(password, passwordHash);
+}
+
+/**
+ * Performs a bcrypt verification against a fixed dummy hash.
+ *
+ * Used when an account does not exist so login attempts still incur
+ * approximately the same password-verification cost as valid accounts.
+ */
+export async function verifyPasswordAgainstDummyHash(password: string): Promise<boolean> {
+  assertPasswordLength(password);
+  return bcrypt.compare(password, DUMMY_PASSWORD_HASH);
 }
 
 /**
