@@ -1,6 +1,12 @@
-export class InvalidCredentialsError extends Error {
+import { ApiError } from './api-error.js';
+
+export class InvalidCredentialsError extends ApiError {
   constructor() {
-    super('Invalid email or password.');
+    super({
+      statusCode: 401,
+      message: 'Invalid email or password.',
+    });
+
     this.name = 'InvalidCredentialsError';
   }
 }
