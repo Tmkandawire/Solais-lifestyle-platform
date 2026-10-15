@@ -22,6 +22,83 @@ enum EventStatus {
   COMPLETED
 }
 
+enum VendorApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PartnerApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TicketStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum IssuedTicketStatus {
+  ISSUED
+  CHECKED_IN
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  TNM_MPAMBA
+  AIRTEL_MONEY
+  BANK_CARD
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  EXPIRED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  TICKET
+  EVENT
+  VENDOR_APPLICATION
+  PARTNER_APPLICATION
+  SYSTEM
+}
+
+
+enum ThemePreference {
+  LIGHT
+  DARK
+}
+
+
+enum ContactMessageStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model Account {
   id String @id @default(uuid())
 
@@ -38,9 +115,17 @@ model Account {
   isActive Boolean @default(true)
 
   lastLoginAt DateTime?
+  announcementsViewedAt DateTime?
 
-  sessions      Session[]
-  eventsCreated Event[]
+  sessions                    Session[]
+  eventsCreated               Event[]
+  orders                      Order[]
+  vendorApplicationsReviewed  VendorApplication[]  @relation("VendorApplicationReviewer")
+  partnerApplicationsReviewed PartnerApplication[] @relation("PartnerApplicationReviewer")
+  issuedTickets               IssuedTicket[]       @relation("IssuedTicketOwner")
+  ticketsCheckedIn            IssuedTicket[]       @relation("IssuedTicketCheckedInBy")
+  notifications               Notification[]
+  preferences AccountPreference?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -49,6 +134,21 @@ model Account {
   @@index([role])
   @@map("accounts")
 }
+
+
+model AccountPreference {
+  id        String          @id @default(uuid())
+  accountId String          @unique
+  theme     ThemePreference @default(LIGHT)
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("account_preferences")
+}
+
 
 model Session {
   id String @id @default(uuid())
@@ -100,14 +200,327 @@ model Event {
 
   createdBy Account @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
+  ticketTypes         TicketType[]
+  gallery             Gallery[]
+  vendorApplications  VendorApplication[]
+  partnerApplications PartnerApplication[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  deletedAt DateTime?
+  orders    Order[]
+
+  @@index([status])
+  @@index([startDate])
+  @@index([createdById])
+  @@map("events")
+}
+
+model VendorApplication {
+  id String @id @default(uuid())
+
+  businessName       String
+  contactPerson      String
+  phoneNumber        String
+  email              String
+  businessCategory   String
+  productsOrServices String
+  websiteOrSocial    String?
+
+  preferredEventId String?
+  preferredEvent   Event?  @relation(fields: [preferredEventId], references: [id], onDelete: SetNull)
+
+  status     VendorApplicationStatus @default(PENDING)
+  adminNotes String?
+
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   Account?  @relation("VendorApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+  @@index([preferredEventId])
+  @@index([email])
+  @@index([createdAt])
+  @@index([reviewedById])
+  @@map("vendor_applications")
+}
+
+model PartnerApplication {
+  id String @id @default(uuid())
+
+  organisationName String
+  contactPerson    String
+  phoneNumber      String
+  email            String
+
+  partnershipType         String
+  organisationDescription String
+  partnershipInterest     String
+  contributionDescription String
+
+  websiteOrSocial String?
+
+  preferredEventId String?
+  preferredEvent   Event?  @relation(fields: [preferredEventId], references: [id], onDelete: SetNull)
+
+  status     PartnerApplicationStatus @default(PENDING)
+  adminNotes String?
+
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   Account?  @relation("PartnerApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+  @@index([preferredEventId])
+  @@index([email])
+  @@index([createdAt])
+  @@index([reviewedById])
+  @@map("partner_applications")
+}
+
+model Gallery {
+  id String @id @default(uuid())
+
+  title       String
+  description String?
+
+  mediaType MediaType
+
+  mediaUrl     String
+  thumbnailUrl String?
+  publicId     String
+
+  eventId String?
+
+  displayOrder Int     @default(0)
+  isPublished  Boolean @default(false)
+
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([eventId])
+  @@index([mediaType])
+  @@index([isPublished])
+  @@index([displayOrder])
+  @@index([createdAt])
+  @@map("gallery")
+}
+
+model TicketType {
+  id String @id @default(uuid())
+
+  eventId String
+
+  name String
+
+  description String?
+
+  price Decimal @db.Decimal(12, 2)
+
+  capacity Int
+
+  soldQuantity Int @default(0)
+
+  status TicketStatus @default(ACTIVE)
+
+  saleStartAt DateTime?
+
+  saleEndAt DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+
+  issuedTickets IssuedTicket[]
+
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
 
   deletedAt DateTime?
 
+  @@index([eventId])
   @@index([status])
-  @@index([startDate])
-  @@index([createdById])
-  @@map("events")
+  @@index([saleStartAt])
+  @@index([saleEndAt])
+  @@map("ticket_types")
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+
+  orderId        String
+  ticketTypeId   String
+  ticketTypeName String
+
+  quantity  Int
+  unitPrice Decimal @db.Decimal(12, 2)
+
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+
+  issuedTickets IssuedTicket[]
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([ticketTypeId])
+  @@map("order_items")
+}
+
+model IssuedTicket {
+  id String @id @default(uuid())
+
+  orderItemId   String
+  ticketTypeId  String
+  accountId     String
+  checkedInById String?
+
+  ticketNumber     String  @unique
+  qrTokenHash      String  @unique
+  qrTokenEncrypted String?
+
+  status IssuedTicketStatus @default(ISSUED)
+
+  checkedInAt DateTime?
+
+  orderItem   OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  ticketType  TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+  account     Account    @relation("IssuedTicketOwner", fields: [accountId], references: [id], onDelete: Restrict)
+  checkedInBy Account?   @relation("IssuedTicketCheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderItemId])
+  @@index([ticketTypeId])
+  @@index([accountId])
+  @@index([status])
+  @@index([checkedInAt])
+  @@map("issued_tickets")
+}
+
+model Order {
+  id String @id @default(uuid())
+
+  accountId String
+  eventId   String
+
+  status OrderStatus @default(PENDING)
+
+  totalAmount Decimal @db.Decimal(12, 2)
+  currency    String  @default("ZMW")
+
+  expiresAt   DateTime
+  paidAt      DateTime?
+  cancelledAt DateTime?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  items OrderItem[]
+
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([eventId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  orderId String @unique
+
+  provider PaymentProvider
+  status   PaymentStatus   @default(PENDING)
+
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("ZMW")
+
+  providerReference String? @unique
+
+  failureReason String?
+
+  paidAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([provider])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  accountId String
+  type      NotificationType
+  title     String           @db.VarChar(160)
+  message   String           @db.VarChar(1000)
+  actionUrl String?          @db.VarChar(500)
+  readAt    DateTime?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([accountId, readAt, createdAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model ContactMessage {
+  id         String               @id @default(uuid())
+  fullName   String               @db.VarChar(160)
+  email      String               @db.VarChar(254)
+  phone      String?              @db.VarChar(40)
+  subject    String               @db.VarChar(200)
+  message    String               @db.VarChar(5000)
+  status     ContactMessageStatus @default(NEW)
+  resolvedAt DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("contact_messages")
+}
+
+model Announcement {
+  id          String             @id @default(uuid())
+  title       String             @db.VarChar(200)
+  message     String             @db.VarChar(5000)
+  status      AnnouncementStatus @default(DRAFT)
+  publishedAt DateTime?
+  archivedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([createdAt])
+  @@map("announcements")
 }

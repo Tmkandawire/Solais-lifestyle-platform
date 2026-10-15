@@ -3,7 +3,30 @@ import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa6";
 import { PiCalendarBlankBold, PiMapPinBold } from "react-icons/pi";
 
+import { useEvents } from "../../hooks/useEvents";
+
+function formatEventDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
 export default function EventsHero() {
+  const { events, loading, error } = useEvents({
+    page: 1,
+    limit: 1,
+  });
+
+  const featuredEvent = events[0] ?? null;
+
   return (
     <section className="relative overflow-hidden bg-[#F7F3ED]">
       {/* Ambient Glow */}
@@ -106,46 +129,123 @@ export default function EventsHero() {
               }}
             />
 
-            {/* Event Card */}
+            {/* Loading State */}
 
-            <motion.div
-              animate={{
-                y: [0, -8, 0],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-              }}
-              className="absolute left-4 top-4 rounded-[24px] border border-white/40 bg-white/75 p-5 shadow-2xl backdrop-blur-xl sm:left-8 sm:top-8 sm:p-7 lg:left-14 lg:top-14 lg:rounded-[34px] lg:p-10"
-            >
-              <p className="text-[10px] uppercase tracking-[0.4em] text-[#C99A5B] sm:text-xs">
-                Featured Event
-              </p>
-
-              <h2
-                className="mt-3 text-[#162425]"
-                style={{
-                  fontFamily: "Cormorant Garamond",
-                  fontSize: "clamp(2rem,4vw,3.75rem)",
-                }}
+            {loading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute left-4 top-4 rounded-[24px] border border-white/40 bg-white/75 p-5 shadow-2xl backdrop-blur-xl sm:left-8 sm:top-8 sm:p-7 lg:left-14 lg:top-14 lg:rounded-[34px] lg:p-10"
               >
-                Sunday
-                <br />
-                Soirée
-              </h2>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-[#C99A5B] sm:text-xs">
+                  Featured Event
+                </p>
 
-              <div className="mt-6 space-y-3 sm:space-y-4 lg:mt-8 lg:space-y-5">
-                <div className="flex items-center gap-3 text-sm text-[#555] sm:text-base">
-                  <PiCalendarBlankBold className="text-lg text-[#C99A5B] sm:text-xl" />
-                  12 September 2026
+                <div className="mt-5 h-10 w-48 animate-pulse rounded bg-[#E5D8C8]" />
+
+                <div className="mt-6 space-y-3">
+                  <div className="h-5 w-44 animate-pulse rounded bg-[#E5D8C8]" />
+                  <div className="h-5 w-52 animate-pulse rounded bg-[#E5D8C8]" />
                 </div>
+              </motion.div>
+            )}
 
-                <div className="flex items-center gap-3 text-sm text-[#555] sm:text-base">
-                  <PiMapPinBold className="text-lg text-[#C99A5B] sm:text-xl" />
-                  Lusaka, Zambia
+            {/* Error State */}
+
+            {!loading && error && (
+              <div className="absolute inset-0 flex items-center justify-center px-6">
+                <div className="max-w-lg rounded-[28px] border border-white/40 bg-white/75 p-8 text-center shadow-2xl backdrop-blur-xl">
+                  <p className="text-xs uppercase tracking-[0.4em] text-[#C99A5B]">
+                    FEATURED EVENT
+                  </p>
+
+                  <h2
+                    className="mt-4 text-[#162425]"
+                    style={{
+                      fontFamily: "Cormorant Garamond",
+                      fontSize: "clamp(2rem,4vw,3.25rem)",
+                    }}
+                  >
+                    We couldn't load the latest event.
+                  </h2>
+
+                  <p className="mt-4 text-sm leading-7 text-[#626262]">
+                    Please check back shortly to discover the latest Solaís
+                    experience.
+                  </p>
                 </div>
               </div>
-            </motion.div>
+            )}
+
+            {/* Empty State */}
+
+            {!loading && !error && !featuredEvent && (
+              <div className="absolute inset-0 flex items-center justify-center px-6">
+                <div className="max-w-lg rounded-[28px] border border-white/40 bg-white/75 p-8 text-center shadow-2xl backdrop-blur-xl">
+                  <p className="text-xs uppercase tracking-[0.4em] text-[#C99A5B]">
+                    COMING SOON
+                  </p>
+
+                  <h2
+                    className="mt-4 text-[#162425]"
+                    style={{
+                      fontFamily: "Cormorant Garamond",
+                      fontSize: "clamp(2rem,4vw,3.25rem)",
+                    }}
+                  >
+                    Something beautiful is coming.
+                  </h2>
+
+                  <p className="mt-4 text-sm leading-7 text-[#626262]">
+                    New experiences are being prepared. Check back soon to
+                    discover what Solaís has planned.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Event Card */}
+
+            {!loading && !error && featuredEvent && (
+              <Link to={`/events/${featuredEvent.id}`} className="block">
+                <motion.div
+                  animate={{
+                    y: [0, -8, 0],
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                  }}
+                  className="absolute left-4 top-4 rounded-[24px] border border-white/40 bg-white/75 p-5 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:bg-white/85 sm:left-8 sm:top-8 sm:p-7 lg:left-14 lg:top-14 lg:rounded-[34px] lg:p-10"
+                >
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-[#C99A5B] sm:text-xs">
+                    Featured Event
+                  </p>
+
+                  <h2
+                    className="mt-3 max-w-[320px] text-[#162425]"
+                    style={{
+                      fontFamily: "Cormorant Garamond",
+                      fontSize: "clamp(2rem,4vw,3.75rem)",
+                    }}
+                  >
+                    {featuredEvent.title}
+                  </h2>
+
+                  <div className="mt-6 space-y-3 sm:space-y-4 lg:mt-8 lg:space-y-5">
+                    <div className="flex items-center gap-3 text-sm text-[#555] sm:text-base">
+                      <PiCalendarBlankBold className="text-lg text-[#C99A5B] sm:text-xl" />
+                      {formatEventDate(featuredEvent.startDate)}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm text-[#555] sm:text-base">
+                      <PiMapPinBold className="text-lg text-[#C99A5B] sm:text-xl" />
+                      {featuredEvent.venue}, {featuredEvent.city}
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
+            )}
 
             {/* Editorial Quote */}
 

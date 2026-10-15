@@ -23,7 +23,7 @@ export default function Navbar() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-[#F7F3ED]/90 backdrop-blur-xl"
+        className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-[#F1EBDE] backdrop-blur-xl"
       >
         <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-6 md:h-24 md:px-10 xl:px-12">
           {/* Logo */}
@@ -37,7 +37,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
 
-          <nav className="hidden items-center gap-8 xl:gap-12 lg:flex">
+          <nav className="hidden items-center gap-7 xl:gap-10 lg:flex">
             {navigation.map((item) => (
               <NavLink
                 key={item.href}
@@ -66,12 +66,27 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* Desktop Login */}
+          {/* Desktop Authentication */}
 
-          <button className="hidden items-center gap-2 rounded-full border border-[#C99A5B] px-6 py-3 text-sm uppercase tracking-[0.2em] transition-all duration-500 hover:-translate-y-0.5 hover:bg-[#162425] hover:text-white md:flex">
-            Login
-            <FiUser size={16} />
-          </button>
+          <div className="hidden items-center gap-5 lg:flex">
+            <NavLink
+              to="/login"
+              className="group flex items-center gap-2 text-[12px] uppercase tracking-[0.2em] text-[#162425] transition duration-300 hover:text-[#C99A5B]"
+            >
+              Sign In
+              <FiUser
+                size={15}
+                className="transition-transform duration-300 group-hover:translate-x-0.5"
+              />
+            </NavLink>
+
+            <NavLink
+              to="/register"
+              className="rounded-full border border-[#C99A5B] bg-[#162425] px-6 py-3 text-[12px] uppercase tracking-[0.2em] text-white transition-all duration-500 hover:-translate-y-0.5 hover:bg-[#203536]"
+            >
+              Join SOLAÍS
+            </NavLink>
+          </div>
 
           {/* Mobile Menu */}
 
@@ -105,7 +120,7 @@ export default function Navbar() {
                 duration: 0.45,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="fixed right-0 top-0 z-50 flex h-screen w-[320px] flex-col bg-[#F7F3ED] p-8 shadow-2xl"
+              className="fixed right-0 top-0 z-50 flex h-screen w-[320px] flex-col bg-[#F1EBDE] p-8 shadow-2xl"
             >
               <div className="mb-16 flex items-center justify-between">
                 <Logo variant="light" className="h-12" />
@@ -151,10 +166,26 @@ export default function Navbar() {
                 ))}
               </nav>
 
-              <button className="mt-10 flex items-center justify-center gap-3 rounded-full bg-[#162425] py-4 uppercase tracking-[0.25em] text-white transition hover:bg-[#203536]">
-                Login
-                <FiUser />
-              </button>
+              {/* Mobile Authentication */}
+
+              <div className="mt-10 space-y-3">
+                <NavLink
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-center gap-3 rounded-full border border-[#C99A5B] py-4 text-sm uppercase tracking-[0.25em] text-[#162425] transition hover:bg-[#EDE4D8]"
+                >
+                  Sign In
+                  <FiUser />
+                </NavLink>
+
+                <NavLink
+                  to="/register"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-center rounded-full bg-[#162425] py-4 text-sm uppercase tracking-[0.25em] text-white transition hover:bg-[#203536]"
+                >
+                  Join SOLAÍS
+                </NavLink>
+              </div>
             </motion.aside>
           </>
         )}

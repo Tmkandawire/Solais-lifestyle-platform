@@ -9,6 +9,12 @@ const environmentSchema = z.object({
 
   FRONTEND_URL: z.url(),
 
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required.'),
+
+  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required.'),
+
+  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required.'),
+
   DATABASE_URL: z
     .string()
     .min(1, 'DATABASE_URL is required.')
@@ -28,6 +34,10 @@ const environmentSchema = z.object({
   JWT_AUDIENCE: z.string().min(1),
 
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']).default('info'),
+
+  ORDER_EXPIRY_BATCH_SIZE: z.coerce.number().int().positive().max(1000).default(50),
+
+  ORDER_EXPIRY_MAX_RUNTIME_MS: z.coerce.number().int().positive().max(300000).default(30000),
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);

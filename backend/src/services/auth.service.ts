@@ -18,6 +18,10 @@ import {
 } from './session.service.js';
 import { generateAccessToken } from './jwt.service.js';
 
+import { prisma } from '../lib/prisma.js';
+import { NotificationType } from '../generated/prisma/enums.js';
+import { createAccountNotification } from './notification.service.js';
+
 import { InvalidCredentialsError } from '../shared/errors/auth.errors.js';
 
 export interface RegisterData {
@@ -50,14 +54,31 @@ export interface AuthenticationResult {
 export async function register(data: RegisterData): Promise<AuthenticationResult> {
   const passwordHash = await hashPassword(data.password);
 
-  const account = await createAccount({
-    email: data.email,
-    passwordHash,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    ...(data.role !== undefined ? { role: data.role } : {}),
-  });
+  const account = await prisma.$transaction(async (tx) => {
+    const newAccount = await createAccount(
+      {
+        email: data.email,
+        passwordHash,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        ...(data.role !== undefined ? { role: data.role } : {}),
+      },
+      tx,
+    );
 
+    await createAccountNotification(
+      newAccount.id,
+      {
+        type: NotificationType.SYSTEM,
+        title: 'Welcome to Solaís',
+        message:
+          "We're delighted to have you here. Your Solaís account is ready. Explore upcoming events and discover experiences worth remembering.",
+      },
+      tx,
+    );
+
+    return newAccount;
+  });
   const session = await createSession({
     accountId: account.id,
 
@@ -141,6 +162,25 @@ export async function refresh(refreshToken: string): Promise<AuthenticationResul
     refreshToken: session.refreshToken,
     sessionId: session.sessionId,
     refreshTokenExpiresAt: session.expiresAt,
+  };
+}
+
+export async function getCurrentAccount(accountId: string) {
+  const account = await findAccountById(accountId);
+
+  if (!account || account.deletedAt || !account.isActive) {
+    throw new InvalidCredentialsError();
+  }
+
+  return {
+    accountId: account.id,
+    firstName: account.firstName,
+    lastName: account.lastName,
+    email: account.email,
+    role: account.role,
+    isActive: account.isActive,
+    emailVerifiedAt: account.emailVerifiedAt,
+    createdAt: account.createdAt,
   };
 }
 

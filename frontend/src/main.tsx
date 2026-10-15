@@ -11,10 +11,15 @@ import "@fontsource/manrope/700.css";
 
 import "./index.css";
 
+import { AuthProvider } from "./context/AuthContext.tsx";
 import { router } from "./routes/router";
+import { ToastProvider } from "./components/ui/feedback/ToastProvider.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <ToastProvider />
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 );

@@ -1,6 +1,8 @@
 import { prisma } from '../lib/prisma.js';
 import { Prisma } from '../generated/prisma/client.js';
+import type { Account } from '../generated/prisma/client.js';
 import { Role } from '../generated/prisma/enums.js';
+import type { NotificationType } from '../generated/prisma/enums.js';
 import { EmailAlreadyExistsError, AccountNotFoundError } from '../shared/errors/account.errors.js';
 
 export interface CreateAccountData {
@@ -16,9 +18,12 @@ export interface CreateAccountData {
 // client, so its inferred return type excludes passwordHash unless explicitly
 // overridden.
 
-export async function createAccount(data: CreateAccountData) {
+export async function createAccount(
+  data: CreateAccountData,
+  client: Prisma.TransactionClient = prisma,
+) {
   try {
-    return await prisma.account.create({
+    return await client.account.create({
       data: {
         email: data.email,
         passwordHash: data.passwordHash,
@@ -31,6 +36,7 @@ export async function createAccount(data: CreateAccountData) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       throw new EmailAlreadyExistsError(data.email);
     }
+
     throw error;
   }
 }
@@ -38,6 +44,74 @@ export async function createAccount(data: CreateAccountData) {
 export async function findAccountById(id: string) {
   return prisma.account.findUnique({
     where: { id },
+  });
+}
+
+/**
+ * Retrieves an account with its password hash for password verification.
+ * Never expose this result through a controller.
+ */
+export async function findAccountForPasswordChange(id: string): Promise<Account | null> {
+  return prisma.account.findUnique({
+    where: { id },
+    omit: {
+      passwordHash: false,
+    },
+  });
+}
+
+/**
+ * Updates the password, revokes all active sessions, and creates the
+ * supplied notification atomically.
+ */
+export async function updatePasswordAndRevokeSessions(
+  accountId: string,
+  passwordHash: string,
+  notification: {
+    type: NotificationType;
+    title: string;
+    message: string;
+    actionUrl?: string | null;
+  },
+): Promise<void> {
+  await prisma.$transaction(async (transaction) => {
+    await transaction.account.update({
+      where: { id: accountId },
+      data: { passwordHash },
+    });
+
+    await transaction.session.updateMany({
+      where: {
+        accountId,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+
+    await transaction.notification.create({
+      data: {
+        accountId,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        ...(notification.actionUrl !== undefined ? { actionUrl: notification.actionUrl } : {}),
+      },
+    });
+  });
+}
+
+export async function updateAccountProfile(
+  id: string,
+  data: {
+    firstName: string;
+    lastName: string;
+  },
+) {
+  return updateOrThrow(id, {
+    firstName: data.firstName,
+    lastName: data.lastName,
   });
 }
 

@@ -28,7 +28,9 @@ export const errorMiddleware: ErrorRequestHandler = (
       });
     }
 
-    response.status(error.statusCode).json(errorResponse(error.message, details));
+    response
+      .status(error.statusCode)
+      .json(errorResponse(error.message, details, error.code, error.data));
 
     return;
   }

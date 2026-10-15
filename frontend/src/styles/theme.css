@@ -28,3 +28,80 @@
 
   --section-spacing: 8rem;
 }
+
+/*
+ * Attendee-only theme tokens.
+ * These are scoped to the attendee portal wrapper so they do not
+ * change the marketing website or admin portal.
+ */
+.attendee-portal {
+  color-scheme: light;
+
+  --attendee-background: #f5f1e9;
+  --attendee-surface: #ffffff;
+  --attendee-surface-muted: #eee5d7;
+  --attendee-text: #122425;
+  --attendee-text-muted: #5f6462;
+  --attendee-border: rgb(18 36 37 / 12%);
+  --attendee-sidebar: #122425;
+  --attendee-sidebar-text: #eee8dd;
+  --attendee-accent: #c99b55;
+}
+
+.attendee-portal.dark {
+  color-scheme: dark;
+
+  --attendee-background: #111918;
+  --attendee-surface: #1b2523;
+  --attendee-surface-muted: #26322f;
+  --attendee-text: #eee8dd;
+  --attendee-text-muted: #b0b8b2;
+  --attendee-border: rgb(238 232 221 / 14%);
+  --attendee-sidebar: #0b1211;
+  --attendee-sidebar-text: #eee8dd;
+  --attendee-accent: #d8b47a;
+}
+
+/* Attendee Account Settings — dark-mode compatibility */
+.attendee-portal.dark .attendee-settings-page {
+  color: var(--attendee-text);
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="text-[#122425]"] {
+  color: var(--attendee-text) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="text-[#EEE8DD]"] {
+  color: var(--attendee-sidebar-text) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="text-[#eee8dd]"] {
+  color: var(--attendee-sidebar-text) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="text-[#B48643]"] {
+  color: var(--attendee-accent) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="text-[#C9A96A]"] {
+  color: var(--attendee-accent) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="bg-white"] {
+  background-color: var(--attendee-surface) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="bg-[#F5F1E9]"],
+.attendee-portal.dark .attendee-settings-page [class*="bg-[#f5f1e9]"] {
+  background-color: var(--attendee-surface-muted) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page [class*="border-[#122425]"] {
+  border-color: var(--attendee-border) !important;
+}
+
+.attendee-portal.dark .attendee-settings-page input {
+  background-color: var(--attendee-surface) !important;
+  color: var(--attendee-text) !important;
+  border-color: var(--attendee-border) !important;
+}

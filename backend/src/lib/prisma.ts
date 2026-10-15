@@ -15,7 +15,7 @@ const adapter = new PrismaPg({
   connectionString: databaseUrl,
 });
 
-function buildPrismaClient() {
+function buildPrismaClient(): PrismaClient {
   return new PrismaClient({
     adapter,
     // Strip passwordHash from every query result by default. Repository
@@ -34,7 +34,7 @@ function buildPrismaClient() {
 }
 
 declare global {
-  var prisma: ReturnType<typeof buildPrismaClient> | undefined;
+  var prisma: PrismaClient | undefined;
 }
 
 export const prisma = globalThis.prisma ?? buildPrismaClient();

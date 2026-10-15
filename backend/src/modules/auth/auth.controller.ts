@@ -1,17 +1,23 @@
 import { env } from '../../config/env.js';
 import type { Request, Response } from 'express';
-import type { Role } from '../../generated/prisma/enums.js';
 
-import { login, refresh, register } from '../../services/auth.service.js';
+import {
+  login,
+  logout,
+  logoutAll,
+  refresh,
+  register,
+  getCurrentAccount,
+} from '../../services/auth.service.js';
 import { successResponse } from '../../shared/responses/api-response.js';
 import { InvalidCredentialsError } from '../../shared/errors/auth.errors.js';
+import type { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 
 interface RegisterRequestBody {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-  role?: Role;
 }
 
 interface LoginRequestBody {
@@ -62,7 +68,6 @@ export async function registerAccount(request: RegisterRequest, response: Respon
     firstName: request.body.firstName,
     lastName: request.body.lastName,
 
-    ...(request.body.role !== undefined ? { role: request.body.role } : {}),
     ...(ipAddress !== undefined ? { ipAddress } : {}),
     ...(userAgent !== undefined ? { userAgent } : {}),
   });
@@ -131,4 +136,42 @@ export async function refreshAccessToken(
       refreshTokenExpiresAt: result.refreshTokenExpiresAt,
     }),
   );
+}
+
+/**
+ * Returns the profile of the currently authenticated account.
+ */
+export async function getCurrentAccountHandler(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const authenticatedRequest = request as AuthenticatedRequest;
+
+  const account = await getCurrentAccount(authenticatedRequest.user.accountId);
+
+  response.status(200).json(successResponse('Current account retrieved successfully.', account));
+}
+
+export async function logoutAccount(request: Request, response: Response): Promise<void> {
+  const authenticatedRequest = request as AuthenticatedRequest;
+
+  await logout(authenticatedRequest.user.sessionId);
+
+  clearRefreshTokenCookie(response);
+
+  response.status(200).json(successResponse('Logged out successfully.', null));
+}
+
+/**
+ * Revokes all active sessions belonging to the authenticated account
+ * and clears the current refresh-token cookie.
+ */
+export async function logoutAllSessions(request: Request, response: Response): Promise<void> {
+  const authenticatedRequest = request as AuthenticatedRequest;
+
+  await logoutAll(authenticatedRequest.user.accountId);
+
+  clearRefreshTokenCookie(response);
+
+  response.status(200).json(successResponse('All sessions revoked successfully.', null));
 }

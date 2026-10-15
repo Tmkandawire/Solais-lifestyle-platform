@@ -10,3 +10,14 @@ export class InvalidCredentialsError extends ApiError {
     this.name = 'InvalidCredentialsError';
   }
 }
+
+export class ForbiddenError extends ApiError {
+  constructor() {
+    super({
+      statusCode: 403,
+      message: 'You do not have permission to perform this action.',
+    });
+
+    this.name = 'ForbiddenError';
+  }
+}
