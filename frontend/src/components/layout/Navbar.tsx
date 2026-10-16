@@ -31,7 +31,7 @@ export default function Navbar() {
           <NavLink to="/">
             <Logo
               variant="light"
-              className="h-11 w-auto transition duration-500 hover:scale-105 md:h-14 lg:h-16"
+              className="h-14 w-auto transition duration-500 hover:scale-105 md:h-[4.5rem] lg:h-20"
             />
           </NavLink>
 
@@ -123,7 +123,7 @@ export default function Navbar() {
               className="fixed right-0 top-0 z-50 flex h-screen w-[320px] flex-col bg-[#F1EBDE] p-8 shadow-2xl"
             >
               <div className="mb-16 flex items-center justify-between">
-                <Logo variant="light" className="h-12" />
+                <Logo variant="light" className="h-16 w-auto" />
 
                 <button
                   onClick={() => setMenuOpen(false)}
