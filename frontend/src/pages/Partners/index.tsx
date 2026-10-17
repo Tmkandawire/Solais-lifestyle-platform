@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
@@ -117,6 +117,8 @@ export default function PartnerApplicationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
 
+  const formCardRef = useRef<HTMLDivElement>(null);
+
   const {
     submit,
     isLoading,
@@ -124,6 +126,13 @@ export default function PartnerApplicationPage() {
   } = useCreatePartnerApplication();
 
   const displayError = formError || submitError;
+
+  const scrollToForm = () => {
+    formCardRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   const progress = useMemo(() => `${(step / 3) * 100}%`, [step]);
 
@@ -171,7 +180,7 @@ export default function PartnerApplicationPage() {
 
     if (step < 3) {
       setStep((current) => (current + 1) as Step);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollToForm();
     }
   };
 
@@ -180,7 +189,7 @@ export default function PartnerApplicationPage() {
 
     if (step > 1) {
       setStep((current) => (current - 1) as Step);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollToForm();
     }
   };
 
@@ -396,7 +405,10 @@ export default function PartnerApplicationPage() {
             </aside>
 
             {/* FORM */}
-            <div className="relative rounded-[32px] border border-[#E5D8C8] bg-[#FCFAF7] px-7 py-9 shadow-[0_30px_90px_rgba(18,18,18,0.05)] sm:px-12 sm:py-14 lg:px-16 lg:py-16">
+            <div
+              ref={formCardRef}
+              className="relative scroll-mt-24 rounded-[32px] border border-[#E5D8C8] bg-[#FCFAF7] px-7 py-9 shadow-[0_30px_90px_rgba(18,18,18,0.05)] sm:px-12 sm:py-14 lg:px-16 lg:py-16"
+            >
               <form onSubmit={handleSubmit}>
                 <AnimatePresence mode="wait">
                   {step === 1 && (
