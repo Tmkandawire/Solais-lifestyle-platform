@@ -18,6 +18,7 @@ import {
 
 import { apiClient } from "../../api/client";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 import SolaisDarkLogo from "../../assets/logos/Solais Logo - Dark.png";
 import { LogoutConfirmModal } from "../ui/LogoutConfirmModal";
 
@@ -116,6 +117,7 @@ function NavigationGroup({
 
 export function AdminShell() {
   const { user, logout, sessionError, retrySession } = useAuth();
+  const { success, error: showError } = useToast();
   const location = useLocation();
 
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -410,9 +412,21 @@ export function AdminShell() {
       <LogoutConfirmModal
         open={logoutModalOpen}
         onClose={() => setLogoutModalOpen(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           setLogoutModalOpen(false);
-          void logout();
+
+          try {
+            await logout();
+
+            success("Signed out successfully.", {
+              description: "You have safely ended your session.",
+            });
+          } catch {
+            showError("Sign-out issue", {
+              description:
+                "Your local session has been cleared, but we couldn't confirm sign-out with the server.",
+            });
+          }
         }}
       />
     </div>

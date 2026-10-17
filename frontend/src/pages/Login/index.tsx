@@ -10,11 +10,14 @@ import {
 } from "react-icons/fi";
 
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
+import { parseApiError } from "../../api/errors";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { success, error: showError } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,6 +33,10 @@ export default function LoginPage() {
 
     try {
       const authenticatedUser = await login(email.trim(), password);
+
+      success("Welcome back!", {
+        description: "You have signed in successfully.",
+      });
 
       const fallbackDestination =
         authenticatedUser.role === "ATTENDEE" ? "/account" : "/admin";
@@ -51,12 +58,16 @@ export default function LoginPage() {
         replace: true,
       });
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to sign in. Please check your details and try again.";
+      const parsedError = parseApiError(
+        err,
+        "Unable to sign in. Please check your details and try again.",
+      );
 
-      setError(message);
+      setError(parsedError.message);
+
+      showError("Sign-in failed", {
+        description: parsedError.message,
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -4,10 +4,13 @@ import { motion } from "framer-motion";
 import { FiArrowLeft, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
 
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
+import { parseApiError } from "../../api/errors";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register, logout } = useAuth();
+  const { success, error: showError } = useToast();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -49,15 +52,24 @@ export default function RegisterPage() {
 
     try {
       await register(trimmedEmail, password, trimmedFirstName, trimmedLastName);
+
+      success("Account created successfully!", {
+        description: "Your account is ready. Please sign in to continue.",
+      });
+
       await logout();
       navigate("/login", { replace: true });
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to create your account. Please try again.";
+      const parsedError = parseApiError(
+        err,
+        "Unable to create your account. Please try again.",
+      );
 
-      setError(message);
+      setError(parsedError.message);
+
+      showError("Registration failed", {
+        description: parsedError.message,
+      });
     } finally {
       setIsSubmitting(false);
     }

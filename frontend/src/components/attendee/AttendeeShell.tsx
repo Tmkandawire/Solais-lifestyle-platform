@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 import SolaisDarkLogo from "../../assets/logos/Solais Logo - Dark.png";
 import { LogoutConfirmModal } from "../ui/LogoutConfirmModal";
 import { useEffect, useState } from "react";
@@ -37,6 +38,7 @@ const navigation = [
 
 export function AttendeeShell() {
   const { user, logout, sessionError, retrySession } = useAuth();
+  const { success, error: showError } = useToast();
   const location = useLocation();
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -352,9 +354,21 @@ export function AttendeeShell() {
       <LogoutConfirmModal
         open={logoutModalOpen}
         onClose={() => setLogoutModalOpen(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           setLogoutModalOpen(false);
-          void logout();
+
+          try {
+            await logout();
+
+            success("Signed out successfully.", {
+              description: "You have safely ended your session.",
+            });
+          } catch {
+            showError("Sign-out issue", {
+              description:
+                "Your local session has been cleared, but we couldn't confirm sign-out with the server.",
+            });
+          }
         }}
       />
     </div>
