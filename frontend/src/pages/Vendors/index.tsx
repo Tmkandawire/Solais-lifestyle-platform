@@ -14,6 +14,8 @@ import {
 import { useCreateVendorApplication } from "../../hooks/useVendorApplication";
 import type { CreateVendorApplicationPayload } from "../../types/vendor-application";
 
+import InternationalPhoneInput from "../../components/forms/InternationalPhoneInput";
+
 type Step = 1 | 2 | 3;
 
 interface FormData {
@@ -435,13 +437,13 @@ export default function VendorApplicationPage() {
                           placeholder="Full name"
                         />
 
-                        <Field
+                        <InternationalPhoneInput
                           label="Phone Number"
                           required
-                          type="tel"
                           value={form.phone}
                           onChange={(value) => updateField("phone", value)}
-                          placeholder="+265 ..."
+                          defaultCountry="ZM"
+                          placeholder="Enter phone number"
                         />
 
                         <Field

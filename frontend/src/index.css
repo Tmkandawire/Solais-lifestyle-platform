@@ -1,3 +1,57 @@
 @import "tailwindcss";
 
 @import "./styles/theme.css";
+
+/* International phone input */
+.international-phone-input {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  border-bottom: 1px solid rgb(23 37 38 / 15%);
+  transition: border-color 0.2s ease;
+}
+
+.international-phone-input:focus-within {
+  border-bottom-color: #c99a5b;
+}
+
+.international-phone-input .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0;
+}
+
+.international-phone-input .PhoneInputCountrySelect {
+  cursor: pointer;
+  max-width: 7rem;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.international-phone-input .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1rem;
+}
+
+.international-phone-input .PhoneInputCountryIcon--border {
+  box-shadow: 0 0 0 1px rgb(23 37 38 / 15%);
+}
+
+.international-phone-input .PhoneInputInput {
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+  padding: 1rem 0;
+  color: #172526;
+  background: transparent;
+  border: none;
+  outline: none;
+  font: inherit;
+}
+
+.international-phone-input .PhoneInputInput::placeholder {
+  color: rgb(23 37 38 / 35%);
+}
