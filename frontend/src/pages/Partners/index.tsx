@@ -14,6 +14,8 @@ import {
 import { useCreatePartnerApplication } from "../../hooks/usePartnerApplication";
 import type { CreatePartnerApplicationPayload } from "../../types/partner-application";
 
+import InternationalPhoneInput from "../../components/forms/InternationalPhoneInput";
+
 type Step = 1 | 2 | 3;
 
 interface FormData {
@@ -453,13 +455,13 @@ export default function PartnerApplicationPage() {
                           placeholder="Full name"
                         />
 
-                        <Field
+                        <InternationalPhoneInput
                           label="Phone Number"
                           required
-                          type="tel"
                           value={form.phone}
                           onChange={(value) => updateField("phone", value)}
-                          placeholder="+265 ..."
+                          defaultCountry="ZM"
+                          placeholder="Enter phone number"
                         />
 
                         <Field
