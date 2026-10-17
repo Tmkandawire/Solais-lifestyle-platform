@@ -31,7 +31,7 @@ export default function Navbar() {
           <NavLink to="/">
             <Logo
               variant="light"
-              className="h-14 w-auto transition duration-500 hover:scale-105 md:h-[4.5rem] lg:h-20"
+              className="h-16 w-auto transition duration-500 hover:scale-105 md:h-[4.5rem] lg:h-20"
             />
           </NavLink>
 

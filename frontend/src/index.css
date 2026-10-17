@@ -2,6 +2,13 @@
 
 @import "./styles/theme.css";
 
+/* Prevent horizontal overflow on mobile */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 /* International phone input */
 .international-phone-input {
   display: flex;
