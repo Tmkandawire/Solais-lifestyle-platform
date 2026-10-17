@@ -9,9 +9,11 @@ import {
   MessageCircle,
   Globe,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 
 import { useCreateVendorApplication } from "../../hooks/useVendorApplication";
+import { useEvents } from "../../hooks/useEvents";
 import type { CreateVendorApplicationPayload } from "../../types/vendor-application";
 
 import InternationalPhoneInput from "../../components/forms/InternationalPhoneInput";
@@ -51,22 +53,13 @@ const categories = [
   "Other",
 ];
 
-/**
- * Placeholder until this step is wired to the real events list (useEvents).
- * This id is never sent to the backend — see buildPayload() below — since
- * it doesn't correspond to an actual Event row and preferredEventId is a
- * foreign key. Once real events are wired in, replace this array with
- * fetched events and drop the GENERIC_EVENT_PREFERENCE_ID special-case.
- */
 const GENERIC_EVENT_PREFERENCE_ID = "future-events";
 
-const events = [
-  {
-    id: GENERIC_EVENT_PREFERENCE_ID,
-    name: "Future Solaís Events",
-    description: "Consider me for upcoming experiences",
-  },
-];
+const FUTURE_EVENTS_OPTION = {
+  id: GENERIC_EVENT_PREFERENCE_ID,
+  name: "Future Solaís Events",
+  description: "Consider me for upcoming experiences",
+};
 
 const pageVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -111,6 +104,27 @@ export default function VendorApplicationPage() {
   const [form, setForm] = useState<FormData>(initialForm);
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const {
+    events: availableEvents,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useEvents({ page: 1, limit: 100 });
+
+  const events = [
+    ...availableEvents
+      .filter((event) => event.status === "PUBLISHED")
+      .map((event) => ({
+        id: event.id,
+        name: event.title,
+        description: new Date(event.startDate).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+      })),
+    FUTURE_EVENTS_OPTION,
+  ];
 
   const formCardRef = useRef<HTMLDivElement>(null);
 
@@ -575,52 +589,65 @@ export default function VendorApplicationPage() {
                       />
 
                       <div className="mt-14">
-                        <label className={labelClass}>
+                        <label
+                          htmlFor="preferredEventId"
+                          className={labelClass}
+                        >
                           Preferred Event{" "}
                           <span className="text-[#C99A5B]">*</span>
                         </label>
 
-                        <div className="space-y-3">
-                          {events.map((event) => {
-                            const selected = form.preferredEventId === event.id;
+                        <div className="relative">
+                          <select
+                            id="preferredEventId"
+                            name="preferredEventId"
+                            required
+                            value={form.preferredEventId}
+                            onChange={(event) =>
+                              updateField(
+                                "preferredEventId",
+                                event.target.value,
+                              )
+                            }
+                            className="w-full appearance-none border-b border-[#172526]/15 bg-transparent py-4 pr-10 text-[#172526] outline-none transition-colors focus:border-[#C99A5B]"
+                          >
+                            <option value="" disabled>
+                              {eventsLoading
+                                ? "Loading available events..."
+                                : "Select your preferred event"}
+                            </option>
 
-                            return (
-                              <button
-                                key={event.id}
-                                type="button"
-                                onClick={() =>
-                                  updateField("preferredEventId", event.id)
-                                }
-                                className={`flex w-full items-center justify-between border p-5 text-left transition-all sm:p-6 ${
-                                  selected
-                                    ? "border-[#C99A5B] bg-[#C99A5B]/8"
-                                    : "border-[#172526]/10 hover:border-[#C99A5B]/50"
-                                }`}
-                              >
-                                <div>
-                                  <p className="font-serif text-2xl">
-                                    {event.name}
-                                  </p>
-                                  <p className="mt-1 text-xs text-[#172526]/50">
-                                    {event.description}
-                                  </p>
-                                </div>
+                            {events.map((event) => (
+                              <option key={event.id} value={event.id}>
+                                {event.name === "Future Solaís Events"
+                                  ? event.name
+                                  : `${event.name} — ${event.description}`}
+                              </option>
+                            ))}
+                          </select>
 
-                                <span
-                                  className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                                    selected
-                                      ? "border-[#C99A5B] bg-[#C99A5B]"
-                                      : "border-[#172526]/20"
-                                  }`}
-                                >
-                                  {selected && (
-                                    <Check className="h-3 w-3 text-white" />
-                                  )}
-                                </span>
-                              </button>
-                            );
-                          })}
+                          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[#C99A5B]">
+                            <ChevronDown className="h-4 w-4" />
+                          </span>
                         </div>
+
+                        {eventsError && (
+                          <p className="mt-3 text-sm text-red-700">
+                            We couldn't load the current events. You can still
+                            select Future Solaís Events.
+                          </p>
+                        )}
+
+                        {!eventsLoading &&
+                          !eventsError &&
+                          !events.some(
+                            (event) => event.id !== GENERIC_EVENT_PREFERENCE_ID,
+                          ) && (
+                            <p className="mt-3 text-sm text-[#172526]/55">
+                              No published events are currently available. You
+                              can still select Future Solaís Events.
+                            </p>
+                          )}
 
                         <div className="mt-12 border-t border-[#172526]/10 pt-7">
                           <div className="flex gap-4">
@@ -628,11 +655,6 @@ export default function VendorApplicationPage() {
                               className="mt-1 h-4 w-4 shrink-0 text-[#C99A5B]"
                               strokeWidth={1.3}
                             />
-                            <p className="max-w-md text-xs leading-6 text-[#172526]/50">
-                              We review every application individually. If
-                              there&apos;s an opportunity for your brand, our
-                              team will contact you directly.
-                            </p>
                           </div>
                         </div>
                       </div>
