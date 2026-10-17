@@ -138,7 +138,7 @@ export default function Footer() {
               duration: 8,
               repeat: Infinity,
             }}
-            className="mx-auto flex h-36 w-36 items-center justify-center rounded-full border border-white/10 bg-white/5 backdrop-blur-xl"
+            className="mx-auto flex h-36 w-36 items-center justify-center rounded-full border border-white/10 bg-[#132424] backdrop-blur-xl"
           >
             <Logo variant="dark" className="w-24" />
           </motion.div>

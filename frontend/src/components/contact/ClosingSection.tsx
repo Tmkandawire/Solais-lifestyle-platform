@@ -24,7 +24,7 @@ export default function ClosingSection() {
             duration: 8,
             repeat: Infinity,
           }}
-          className="mx-auto mb-10 flex h-24 w-24 items-center justify-center rounded-full border border-[#E7DCCF] bg-white/70 shadow-xl backdrop-blur-xl sm:mb-12 sm:h-28 sm:w-28 lg:h-32 lg:w-32"
+          className="mx-auto mb-10 flex h-24 w-24 items-center justify-center rounded-full border border-[#E7DCCF] bg-[#F1EADE] shadow-xl backdrop-blur-xl sm:mb-12 sm:h-28 sm:w-28 lg:h-32 lg:w-32"
         >
           <Logo variant="light" className="w-14 sm:w-16 lg:w-20" />
         </motion.div>
