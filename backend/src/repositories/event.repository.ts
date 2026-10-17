@@ -100,20 +100,24 @@ export async function findEvents(options: FindEventsOptions): Promise<PaginatedE
 
   const skip = (page - 1) * limit;
 
-  const [events, total] = await prisma.$transaction([
-    prisma.event.findMany({
-      where,
-      orderBy: {
-        startDate: 'asc',
-      },
-      skip,
-      take: limit,
-    }),
+  const [events, total] = await prisma.$transaction(
+    async (tx) => {
+      const events = await tx.event.findMany({
+        where,
+        orderBy: { startDate: 'asc' },
+        skip,
+        take: limit,
+      });
 
-    prisma.event.count({
-      where,
-    }),
-  ]);
+      const total = await tx.event.count({ where });
+
+      return [events, total] as const;
+    },
+    {
+      maxWait: 15000,
+      timeout: 30000,
+    },
+  );
 
   return {
     events,
