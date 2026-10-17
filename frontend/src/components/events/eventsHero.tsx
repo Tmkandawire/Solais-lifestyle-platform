@@ -78,7 +78,7 @@ export default function EventsHero() {
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6 lg:mt-16">
             <Link
-              to="/contact"
+              to="/register"
               className="w-full rounded-full bg-[#162425] px-10 py-5 text-center text-sm uppercase tracking-[0.3em] text-white transition-all duration-500 hover:-translate-y-1 hover:bg-[#203536] sm:w-auto"
             >
               Reserve Your Place
