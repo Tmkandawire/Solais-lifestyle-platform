@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   ArrowLeft,
   CalendarDays,
@@ -21,6 +23,7 @@ import {
   usePublishEvent,
 } from "../../../../hooks/useAdminEvent";
 import { useToast } from "../../../../hooks/useToast";
+import EventConfirmationModal from "../../../../components/admin/EventConfirmationModal";
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("en-GB", {
@@ -145,6 +148,10 @@ export default function AdminEventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
 
+  const [confirmationAction, setConfirmationAction] = useState<
+    "cancel" | "delete" | "complete" | null
+  >(null);
+
   const { event, isLoading, error, refresh } = useAdminEvent(id);
 
   const { publish, isLoading: isPublishing } = usePublishEvent();
@@ -176,14 +183,10 @@ export default function AdminEventDetailPage() {
   async function handleComplete() {
     if (!event) return;
 
-    const confirmed = window.confirm(
-      "Mark this event as completed? This action changes the event lifecycle status.",
-    );
-
-    if (!confirmed) return;
-
     try {
       await complete(event.id);
+
+      setConfirmationAction(null);
 
       toast.success("Event marked as completed.");
 
@@ -196,14 +199,10 @@ export default function AdminEventDetailPage() {
   async function handleCancel() {
     if (!event) return;
 
-    const confirmed = window.confirm(
-      "Cancel this event? Attendees should no longer be able to treat it as an active published event.",
-    );
-
-    if (!confirmed) return;
-
     try {
       await cancel(event.id);
+
+      setConfirmationAction(null);
 
       toast.success("Event cancelled.");
 
@@ -216,14 +215,10 @@ export default function AdminEventDetailPage() {
   async function handleDelete() {
     if (!event) return;
 
-    const confirmed = window.confirm(
-      "Delete this event? The event will be removed from the active administration catalogue.",
-    );
-
-    if (!confirmed) return;
-
     try {
       await remove(event.id);
+
+      setConfirmationAction(null);
 
       toast.success("Event deleted successfully.", {
         description: "The event has been removed from the active catalogue.",
@@ -362,7 +357,7 @@ export default function AdminEventDetailPage() {
                   label={isCompleting ? "Completing..." : "Complete"}
                   disabled={isMutating}
                   variant="primary"
-                  onClick={handleComplete}
+                  onClick={() => setConfirmationAction("complete")}
                 />
               )}
             </div>
@@ -530,7 +525,7 @@ export default function AdminEventDetailPage() {
                 label={isCancelling ? "Cancelling..." : "Cancel event"}
                 disabled={isMutating}
                 variant="danger"
-                onClick={handleCancel}
+                onClick={() => setConfirmationAction("cancel")}
               />
             )}
 
@@ -540,12 +535,29 @@ export default function AdminEventDetailPage() {
                 label={isDeleting ? "Deleting..." : "Delete event"}
                 disabled={isMutating}
                 variant="danger"
-                onClick={handleDelete}
+                onClick={() => setConfirmationAction("delete")}
               />
             )}
           </div>
         </section>
       )}
+
+      <EventConfirmationModal
+        event={event}
+        action={confirmationAction ?? "cancel"}
+        isOpen={confirmationAction !== null}
+        isLoading={isMutating}
+        onClose={() => setConfirmationAction(null)}
+        onConfirm={() => {
+          if (confirmationAction === "complete") {
+            void handleComplete();
+          } else if (confirmationAction === "cancel") {
+            void handleCancel();
+          } else if (confirmationAction === "delete") {
+            void handleDelete();
+          }
+        }}
+      />
     </div>
   );
 }
