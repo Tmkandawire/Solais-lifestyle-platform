@@ -1,5 +1,15 @@
-import { type FormEvent, useState } from "react";
-import { ArrowLeft, CalendarDays, Image, MapPin, Save } from "lucide-react";
+import { type FormEvent, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Image,
+  MapPin,
+  Save,
+  Upload,
+} from "lucide-react";
+
+import { uploadGalleryMedia } from "../../../../api/gallery.api";
+
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useAdminEvent, useUpdateEvent } from "../../../../hooks/useAdminEvent";
@@ -75,9 +85,44 @@ function EditEventForm({ event }: EditEventFormProps) {
   const [bannerImageUrl, setBannerImageUrl] = useState(
     event.bannerImageUrl ?? "",
   );
+
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
   const [capacity, setCapacity] = useState(
     event.capacity === null ? "" : String(event.capacity),
   );
+
+  async function handleBannerUpload(file: File | undefined): Promise<void> {
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Please select a JPG, PNG, or WebP image.");
+      return;
+    }
+
+    setIsUploadingBanner(true);
+
+    try {
+      const uploaded = await uploadGalleryMedia(file);
+
+      if (uploaded.mediaType !== "IMAGE") {
+        toast.error("The uploaded file must be an image.");
+        return;
+      }
+
+      setBannerImageUrl(uploaded.mediaUrl);
+      toast.success("Banner image uploaded successfully.");
+    } catch {
+      toast.error("Failed to upload the banner image. Please try again.");
+    } finally {
+      setIsUploadingBanner(false);
+
+      if (bannerFileInputRef.current) {
+        bannerFileInputRef.current.value = "";
+      }
+    }
+  }
 
   async function handleSubmit(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
@@ -396,6 +441,34 @@ function EditEventForm({ event }: EditEventFormProps) {
                 className="w-full rounded-xl border border-[#122425]/10 bg-[#faf8f4] px-4 py-3.5 text-sm text-[#122425] outline-none transition focus:border-[#c99b55]/60 focus:bg-white"
                 placeholder="https://..."
               />
+
+              <input
+                ref={bannerFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(event) => {
+                  void handleBannerUpload(event.target.files?.[0]);
+                }}
+              />
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => bannerFileInputRef.current?.click()}
+                  disabled={isUploadingBanner || isLoading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#122425]/15 px-4 py-2.5 text-xs font-semibold text-[#122425] transition hover:bg-[#122425]/5 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Upload className="h-4 w-4" strokeWidth={1.5} />
+                  {isUploadingBanner
+                    ? "Uploading image..."
+                    : "Upload banner image"}
+                </button>
+
+                <p className="text-[10px] leading-5 text-[#122425]/45">
+                  Upload a JPG, PNG, or WebP image, or enter a URL manually.
+                </p>
+              </div>
 
               <p className="mt-2 text-[10px] leading-5 text-[#122425]/35">
                 Leave empty to remove the current banner image.
