@@ -40,7 +40,7 @@ function setRefreshTokenCookie(response: Response, refreshToken: string, expires
   response.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     expires: expiresAt,
     path: '/api/v1/auth',
   });
@@ -50,7 +50,7 @@ function clearRefreshTokenCookie(response: Response): void {
   response.clearCookie(REFRESH_COOKIE_NAME, {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     path: '/api/v1/auth',
   });
 }
