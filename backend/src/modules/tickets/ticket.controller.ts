@@ -5,7 +5,8 @@ import {
   createNewTicketType,
   deactivateTicketType,
   deleteTicketType,
-  getTicketTypeById,
+  getManagedTicketTypeById,
+  getPublicTicketTypeById,
   listPublicTicketTypes,
   listTicketTypes,
   releaseTickets,
@@ -123,9 +124,10 @@ export const createTicket = asyncHandler<
  *
  * GET /tickets/:id
  */
+
 export const getTicket = asyncHandler<TicketTypeIdInput, unknown, unknown, unknown>(
   async (request, response) => {
-    const ticketType = await getTicketTypeById(request.params.id);
+    const ticketType = await getPublicTicketTypeById(request.params.id);
 
     response.status(200).json(successResponse('Ticket type retrieved successfully.', ticketType));
   },
@@ -139,9 +141,10 @@ export const getTicket = asyncHandler<TicketTypeIdInput, unknown, unknown, unkno
  * Requires an authenticated actor because this endpoint is part of the
  * administrative ticket-management surface.
  */
+
 export const getManagedTicket = asyncHandler<TicketTypeIdInput, unknown, unknown, unknown>(
   async (request, response) => {
-    const ticketType = await getTicketTypeById(request.params.id);
+    const ticketType = await getManagedTicketTypeById(request.params.id, getTicketActor(request));
 
     response.status(200).json(successResponse('Ticket type retrieved successfully.', ticketType));
   },

@@ -18,6 +18,7 @@ import {
 
 import { validateBody } from '../../middleware/validation.middleware.js';
 import { loginSchema, registerSchema } from './auth.schemas.js';
+import { requireTrustedOrigin } from '../../middleware/trusted-origin.middleware.js';
 
 export const authRouter = Router();
 
@@ -25,7 +26,7 @@ authRouter.post('/register', registerRateLimiter, validateBody(registerSchema), 
 
 authRouter.post('/login', loginRateLimiter, validateBody(loginSchema), loginAccount);
 
-authRouter.post('/refresh', refreshRateLimiter, refreshAccessToken);
+authRouter.post('/refresh', requireTrustedOrigin, refreshRateLimiter, refreshAccessToken);
 
 authRouter.get('/me', authenticate, getCurrentAccountHandler);
 

@@ -152,6 +152,7 @@ export async function refresh(refreshToken: string): Promise<AuthenticationResul
   const account = await findAccountById(session.accountId);
 
   if (!account || !account.isActive || account.deletedAt !== null) {
+    await revokeSession(session.sessionId);
     throw new InvalidCredentialsError();
   }
 

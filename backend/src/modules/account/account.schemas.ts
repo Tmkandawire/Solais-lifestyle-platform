@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+const passwordSchema = z.string().refine((value) => Buffer.byteLength(value, 'utf8') <= 72, {
+  message: 'Password must not exceed 72 bytes when encoded as UTF-8.',
+});
+
 /**
  * Scaffolded for a future admin-facing lookup (e.g. GET /account/:id).
  * Not currently wired into any route.
@@ -12,7 +16,7 @@ export type AccountIdInput = z.infer<typeof accountIdSchema>;
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required.'),
-    newPassword: z.string().min(8, 'New password must be at least 8 characters.'),
+    newPassword: passwordSchema.min(8, 'New password must be at least 8 characters.'),
   })
   .refine((data) => data.currentPassword !== data.newPassword, {
     message: 'Your new password must be different from your current password.',

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { PrismaClient } from '../generated/prisma/client.js';
 
 const LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
@@ -7,13 +8,22 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const databaseUrl = process.env.DATABASE_URL;
 
+if (databaseUrl) {
+  console.log('[Prisma startup] Database host:', new URL(databaseUrl).hostname);
+}
+
 if (!databaseUrl) {
   throw new Error('DATABASE_URL environment variable is not set.');
 }
 
-const adapter = new PrismaPg({
+const pool = new pg.Pool({
   connectionString: databaseUrl,
+  ssl: {
+    rejectUnauthorized: true,
+  },
 });
+
+const adapter = new PrismaPg(pool);
 
 function buildPrismaClient(): PrismaClient {
   return new PrismaClient({

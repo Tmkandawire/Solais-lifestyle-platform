@@ -156,6 +156,35 @@ export async function getTicketTypeById(id: string) {
 }
 
 /**
+ * Retrieves a ticket type for public attendee-facing access.
+ *
+ * Only ACTIVE ticket types belonging to PUBLISHED events are exposed.
+ * Returns the public DTO rather than the raw Prisma record.
+ */
+export async function getPublicTicketTypeById(id: string): Promise<PublicTicketType> {
+  const ticketType = await getTicketTypeById(id);
+
+  await requirePurchasableEvent(ticketType.eventId);
+
+  if (ticketType.status !== TicketStatus.ACTIVE) {
+    throw new TicketTypeNotFoundError(id);
+  }
+
+  return toPublicTicketType(ticketType);
+}
+
+/**
+ * Retrieves a single ticket type for administrative management.
+ *
+ * Requires an authorized ticket manager before retrieving the record.
+ */
+export async function getManagedTicketTypeById(id: string, actor: TicketActor) {
+  requireTicketManager(actor);
+
+  return getTicketTypeById(id);
+}
+
+/**
  * Retrieves ticket types belonging to an event.
  */
 export async function listTicketTypes(

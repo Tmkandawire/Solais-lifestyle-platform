@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma.js';
-import { Prisma, type Session } from '../generated/prisma/client.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { SessionNotFoundError } from '../shared/errors/session.errors.js';
 
 export interface CreateSessionData {
@@ -43,20 +43,32 @@ export async function findSessionByRefreshTokenHash(refreshTokenHash: string) {
 }
 
 /**
- * Persists a rotated refresh token hash for an existing session.
+ * Atomically rotates a refresh token only when the stored hash
+ * still matches the token presented by the caller.
  *
- * Called during refresh-token rotation. The session expiry may also be
- * updated when the refresh token is rotated.
+ * The existing expiresAt is intentionally preserved to enforce
+ * an absolute session lifetime.
  */
 export async function updateRefreshTokenHash(
   sessionId: string,
-  refreshTokenHash: string,
-  expiresAt?: Date,
-): Promise<Session> {
-  return updateOrThrow(sessionId, {
-    refreshTokenHash,
-    ...(expiresAt !== undefined ? { expiresAt } : {}),
+  expectedRefreshTokenHash: string,
+  newRefreshTokenHash: string,
+): Promise<boolean> {
+  const result = await prisma.session.updateMany({
+    where: {
+      id: sessionId,
+      refreshTokenHash: expectedRefreshTokenHash,
+      revokedAt: null,
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    data: {
+      refreshTokenHash: newRefreshTokenHash,
+    },
   });
+
+  return result.count === 1;
 }
 
 export async function revokeSession(id: string) {

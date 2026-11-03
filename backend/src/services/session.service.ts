@@ -181,22 +181,29 @@ export async function rotateRefreshToken(refreshToken: string): Promise<SessionT
   const refreshTokenJwt = await generateRefreshJwt(payload.sub, payload.sessionId);
 
   const newRefreshTokenHash = hashRefreshToken(refreshTokenJwt);
-  const expiresAt = getRefreshSessionExpiry();
 
-  await updateRefreshTokenHash(payload.sessionId, newRefreshTokenHash);
+  const rotated = await updateRefreshTokenHash(
+    payload.sessionId,
+    session.refreshTokenHash,
+    newRefreshTokenHash,
+  );
+
+  if (!rotated) {
+    return null;
+  }
 
   return {
     accountId: payload.sub,
     sessionId: payload.sessionId,
     refreshToken: refreshTokenJwt,
-    expiresAt,
+    expiresAt: session.expiresAt,
   };
 }
 
 /**
  * Revokes one session.
  */
-export async function revokeSession(sessionId: string) {
+export function revokeSession(sessionId: string) {
   return revokeSessionRecord(sessionId);
 }
 
